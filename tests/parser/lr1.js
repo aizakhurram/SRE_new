@@ -54,30 +54,23 @@ exports["test basic JSON grammar"] = function () {
             "macros": {
                 "digit": "[0-9]"
             },
-            "rules": [
-                ["\\s+", "/* skip whitespace */"],
-                ["{digit}+(\\.{digit}+)?", "return 'NUMBER';"],
-                ["\"[^\"]*", function(){
-                    if(yytext.charAt(yyleng-1) == '\\') {
-                        // remove escape
-                        yytext = yytext.substr(0,yyleng-2);
-                        this.more();
-                    } else {
-                        yytext = yytext.substr(1); // swallow start quote
-                        this.input(); // swallow end quote
-                        return "STRING";
-                    }
-                }],
-                ["\\{", "return '{'"],
-                ["\\}", "return '}'"],
-                ["\\[", "return '['"],
-                ["\\]", "return ']'"],
-                [",", "return ','"],
-                [":", "return ':'"],
-                ["true\\b", "return 'TRUE'"],
-                ["false\\b", "return 'FALSE'"],
-                ["null\\b", "return 'NULL'"]
-            ]
+           "rules": [
+               ["\\s+", "/* skip whitespace */"],
+               ["{digit}+(\\.{digit}+)?", "return 'NUMBER';"],
+               [
+                 "\"(?:\\\\[\"\\\\/bfnrt]|\\\\u[a-fA-F0-9]{4}|[^\"\\\\])*\"",
+                 "yytext = yytext.slice(1, -1); return 'STRING';"
+               ],
+               ["\\{", "return '{';"],
+               ["\\}", "return '}';"],
+               ["\\[", "return '[';"],
+               ["\\]", "return ']';"],
+               [",", "return ',';"],
+               [":", "return ':';"],
+               ["true\\b", "return 'TRUE';"],
+               ["false\\b", "return 'FALSE';"],
+               ["null\\b", "return 'NULL';"]
+           ]
         },
 
         "tokens": "STRING NUMBER { } [ ] , : TRUE FALSE NULL",
@@ -111,10 +104,11 @@ exports["test basic JSON grammar"] = function () {
         },
     };
 
-    var source = '{"foo": "Bar", "hi": 42, "array": [1,2,3.004,4], "false": false, "true":true, "null": null, "obj": {"ha":"ho"}, "string": "string\\"sgfg" }';
+   var source = '{"foo": "Bar", "hi": 42, "array": [1,2,3.004,4], "false": false, "true":true, "null": null, "obj": {"ha":"ho"}, "string": "string\\"sgfg" }';
 
-    var parser = new Jison.Parser(grammar, {type: "lr"});
-    assert.ok(parser.parse(source));
+
+     var parser = new Jison.Parser(grammar, { type: "lr" });
+      assert.ok(parser.parse(source));
 }
 
 exports["test compilers test grammar"] = function () {
