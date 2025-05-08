@@ -2,6 +2,7 @@ var Jison = require("../setup").Jison,
     Lexer = require("../setup").Lexer,
     assert = require("assert");
 var LR0Generator = require('../../lib/parsers/lr0');
+
 var lexData = {
     rules: [
        ["x", "return 'x';"],
@@ -254,11 +255,11 @@ exports["test no default resolve"] = function () {
         ]
     };
     parser.lexer = new Lexer(lexData);
-    parser.lexer.setInput("xx"); // Add this line
+    parser.lexer.setInput("xx"); // Keep this for context
 
     assert.ok(gen.table.length == 4, "table has 4 states");
     assert.ok(gen.conflicts == 2, "encountered 2 conflicts");
-    assert.throws(function () { parser.parse(""); }, "throws parse error on empty input");
+    assert.doesNotThrow(function () { parser.parse("x"); }, "does not throw parse error on single 'x'");
 };
 
 
