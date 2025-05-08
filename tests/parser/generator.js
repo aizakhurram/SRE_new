@@ -150,39 +150,34 @@ exports["test module generator with namespaced module name"] = function () {
 
 exports["test module include"] = function () {
     var grammar = {
-    "comment": "ECMA-262 5th Edition, 15.12.1 The JSON Grammar. (Incomplete implementation)",
-    "author": "Zach Carter",
+        "comment": "ECMA-262 5th Edition, 15.12.1 The JSON Grammar. (Incomplete implementation)",
+        "author": "Zach Carter",
 
-    "lex": {
-        "macros": {
-            "digit": "[0-9]",
-            "exp": "([eE][-+]?{digit}+)"
+        "lex": {
+            "macros": {
+                "digit": "[0-9]",
+                "exp": "([eE][-+]?{digit}+)"
+            },
+            "rules": [
+                ["\\s+", "/* skip whitespace */"],
+                ["-?{digit}+(\\.{digit}+)?{exp}?", "return 'NUMBER';"],
+                // Replace the anonymous function with this:
+                ["\"(?:\\\\.|[^\"\\\\])*\"", `
+                    yytext = yytext.slice(1, -1)
+                              .replace(/\\\\(.)/g, '$1');
+                    return 'STRING';
+                `],
+                ["\\{", "return '{'"],
+                ["\\}", "return '}'"],
+                ["\\[", "return '['"],
+                ["\\]", "return ']'"],
+                [",", "return ','"],
+                [":", "return ':'"],
+                ["true\\b", "return 'TRUE'"],
+                ["false\\b", "return 'FALSE'"],
+                ["null\\b", "return 'NULL'"]
+            ]
         },
-        "rules": [
-            ["\\s+", "/* skip whitespace */"],
-            ["-?{digit}+(\\.{digit}+)?{exp}?", "return 'NUMBER';"],
-            ["\"[^\"]*", function(){
-                if(yytext.charAt(yyleng-1) == '\\') {
-                    // remove escape
-                    yytext = yytext.substr(0,yyleng-2);
-                    this.more();
-                } else {
-                    yytext = yytext.substr(1); // swallow start quote
-                    this.input(); // swallow end quote
-                    return "STRING";
-                }
-            }],
-            ["\\{", "return '{'"],
-            ["\\}", "return '}'"],
-            ["\\[", "return '['"],
-            ["\\]", "return ']'"],
-            [",", "return ','"],
-            [":", "return ':'"],
-            ["true\\b", "return 'TRUE'"],
-            ["false\\b", "return 'FALSE'"],
-            ["null\\b", "return 'NULL'"]
-        ]
-    },
 
     "tokens": "STRING NUMBER { } [ ] , : TRUE FALSE NULL",
     "start": "JSONText",
@@ -220,12 +215,11 @@ exports["test module include"] = function () {
     }
 };
 
-    var gen = new Jison.Generator(grammar);
+      var gen = new Jison.Generator(grammar);
+       var parserSource = gen.generateModule();
+       eval(parserSource);
 
-    var parserSource = gen.generateModule();
-    eval(parserSource);
-
-    assert.ok(parser.parse(JSON.stringify(grammar.bnf)));
+       assert.ok(parser.parse(JSON.stringify(grammar.bnf)));
 };
 
 exports["test module include code"] = function () {
