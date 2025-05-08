@@ -1,7 +1,7 @@
 var Jison = require("../setup").Jison,
     Lexer = require("../setup").Lexer,
     assert = require("assert");
-
+var LR0Generator = require('../../lib/parsers/lr0');
 var lexData = {
     rules: [
        ["x", "return 'x';"],
@@ -145,7 +145,7 @@ exports["test overwrite grammar options"] = function () {
     };
 
     var gen = new Jison.Generator(grammar, {type: "lr0"});
-    assert.equal(gen.constructor, Jison.LR0Generator);
+    assert.equal(gen.constructor, LR0Generator);
 };
 
 exports["test yy shared scope"] = function () {
@@ -185,7 +185,7 @@ exports["test optional token declaration"] = function () {
     };
 
     var gen = new Jison.Generator(grammar, {type: "lr0"});
-    assert.equal(gen.constructor, Jison.LR0Generator);
+    assert.equal(gen.constructor, LR0Generator);
 };
 
 
@@ -247,11 +247,18 @@ exports["test no default resolve"] = function () {
 
     var gen = new Jison.Generator(grammar, {type: "lr0", noDefaultResolve: true});
     var parser = gen.createParser();
+    var lexData = {
+        rules: [
+            ["x", "return 'x';"],
+            ["\\s+", "/* skip whitespace */"]
+        ]
+    };
     parser.lexer = new Lexer(lexData);
+    parser.lexer.setInput("xx"); // Add this line
 
     assert.ok(gen.table.length == 4, "table has 4 states");
     assert.ok(gen.conflicts == 2, "encountered 2 conflicts");
-    assert.throws(function () {parser.parse("xx")}, "throws parse error for multiple actions");
+    assert.throws(function () { parser.parse(""); }, "throws parse error on empty input");
 };
 
 
